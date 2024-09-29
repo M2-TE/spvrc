@@ -1,6 +1,6 @@
 # SPVRC
 
-SPIRV-V Resource Compiler
+SPIR-V Resource Compiler
 
 ## Description
 Simple CMake project that translates GLSL shaders into SPIR-V shader bytecode using glslangValidator and embeds them into a library to link against.
