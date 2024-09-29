@@ -38,7 +38,7 @@ set(GLSLANG_CLI_PARAMS
 if (${Vulkan_glslangValidator_FOUND})
     # compile glsl to spirv
     foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
-        file(RELATIVE_PATH FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${GLSL_FILE}")
+        file(RELATIVE_PATH FILE_NAME "${CMAKE_SOURCE_DIR}/shaders" "${GLSL_FILE}")
         set(SPIRV_FILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
         string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
         string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
