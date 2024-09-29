@@ -140,7 +140,7 @@ namespace spvrc {
 # insert shader data
 foreach(PATH_REL VAR_NAME IN ZIP_LISTS SPIRV_HEADER_PATHS_REL SPIRV_VARIABLE_NAMES)
     file(APPEND "${SPVRC_SRC}"
-"            case hash(\"${PATH_REL}\"): data = { ${VAR_NAME}, ${VAR_NAME} + std::size(example_comp)}; break;"
+"            case hash(\"${PATH_REL}\"): data = { ${VAR_NAME}, ${VAR_NAME} + std::size(${VAR_NAME})}; break;\n"
     )
 endforeach(PATH_REL VAR_NAME)
 # end namespace
