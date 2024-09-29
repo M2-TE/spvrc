@@ -115,7 +115,7 @@ file(WRITE "${SPVRC_SRC}"
 "#include <string_view>
 #include <cstdint>
 #include <vector>
-#include \"spvrc.hpp\"
+#include \"spvrc/spvrc.hpp\"
 ")
 # include shader headers
 foreach(HEADER_PATH ${SPIRV_HEADER_PATHS_FULL})
