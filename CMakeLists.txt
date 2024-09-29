@@ -12,47 +12,16 @@ if (NOT DEFINED SPVRC_SHADER_DIR)
     if (NOT SPVRC_TOP_LEVEL_PROJECT)
         message(FATAL_ERROR "SPVRC_SHADER_DIR must be defined")
     else()
-        set(SPVRC_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+        set(SPVRC_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
     endif()
 endif()
 if (NOT DEFINED SPVRC_SHADER_ENV)
     set(SPVRC_SHADER_ENV "vulkan1.3")
 endif()
 
-# glslangValidator for runtime/static shader compilation (glsl to spirv)
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
-file(GLOB_RECURSE GLSL_SOURCE_FILES CONFIGURE_DEPENDS
-    "${SPVRC_SHADER_DIR}/*.vert"
-    "${SPVRC_SHADER_DIR}/*.frag"
-    "${SPVRC_SHADER_DIR}/*.comp")
+# build glslangValidator if not found
 find_package(Vulkan COMPONENTS glslangValidator)
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
-set(GLSLANG_CLI_PARAMS 
-    # --keep-uncalled
-    --enhanced-msgs
-    # --spirv-val
-    --quiet
-    -Os
-    -I"${SPVRC_SHADER_DIR}"
-    --target-env "${SPVRC_SHADER_ENV}")
-if (${Vulkan_glslangValidator_FOUND})
-    # compile glsl to spirv
-    foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
-        file(RELATIVE_PATH FILE_NAME "${CMAKE_SOURCE_DIR}/shaders" "${GLSL_FILE}")
-        set(SPIRV_FILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
-        string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
-        string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
-        add_custom_command(
-            COMMENT "Compiling shader: ${FILE_NAME}"
-            OUTPUT  "${SPIRV_FILE}"
-            COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_FILE}.d" --vn "${SPV_VAR_NAME}" "${GLSL_FILE}" -o "${SPIRV_FILE}"
-            DEPFILE "${SPIRV_FILE}.d"
-            DEPENDS "${GLSL_FILE}")
-        list(APPEND SPIRV_HEADER_PATHS_REL "${FILE_NAME}")
-        list(APPEND SPIRV_HEADER_PATHS_FULL "${SPIRV_FILE}")
-        list(APPEND SPIRV_VARIABLE_NAMES "${SPV_VAR_NAME}")
-    endforeach(GLSL_FILE)
-else()
+if (NOT ${Vulkan_glslangValidator_FOUND})
     include(FetchContent)
     # SPIRV-Tools for glslang compiler
     set(SKIP_SPIRV_TOOLS_INSTALL ON)
@@ -78,11 +47,11 @@ else()
         OVERRIDE_FIND_PACKAGE
         SYSTEM)
     FetchContent_MakeAvailable(spirv-headers spirv-tools)
-    # glslang for runtime/static shader compilation
+    # glslangValidator for runtime/static shader compilation
     set(ENABLE_OPT ON)
     set(ENABLE_HLSL OFF)
     set(ENABLE_GLSLANG_JS OFF)
-    set(ENABLE_GLSLANG_BINARIES ON) # enable/disable standalone GLSL compiler
+    set(ENABLE_GLSLANG_BINARIES ON)
     set(ENABLE_SPVREMAPPER OFF)
     set(GLSLANG_ENABLE_INSTALL OFF)
     set(GLSLANG_TESTS OFF)
@@ -94,20 +63,37 @@ else()
         OVERRIDE_FIND_PACKAGE
         SYSTEM)
     FetchContent_MakeAvailable(glslang)
-
-    # # compile glsl to spirv
-    # foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
-    #     file(RELATIVE_PATH FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/shaders" "${GLSL_FILE}")
-    #     set(SPIRV_FILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}")
-    #     add_custom_command(
-    #         COMMENT "Compiling shader: ${FILE_NAME}"
-    #         OUTPUT  "${SPIRV_FILE}"
-    #         COMMAND glslang-standalone ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_FILE}.d" "${GLSL_FILE}" -o "${SPIRV_FILE}"
-    #         DEPFILE "${SPIRV_FILE}.d"
-    #         DEPENDS "${GLSL_FILE}" glslang-standalone)
-    #     list(APPEND SPIRV_BINARY_FILES "${SPIRV_FILE}")
-    # endforeach(GLSL_FILE)
+    set(Vulkan_GLSLANG_VALIDATOR_EXECUTABLE glslang-standalone)
 endif()
+
+# compile glsl to spirv
+file(GLOB_RECURSE GLSL_SOURCE_FILES CONFIGURE_DEPENDS
+    "${SPVRC_SHADER_DIR}/*.vert"
+    "${SPVRC_SHADER_DIR}/*.frag"
+    "${SPVRC_SHADER_DIR}/*.comp")
+set(GLSLANG_CLI_PARAMS 
+    # --keep-uncalled
+    # --spirv-val
+    --enhanced-msgs --quiet -Os
+    --target-env "${SPVRC_SHADER_ENV}"
+    -I"${SPVRC_SHADER_DIR}")
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
+    file(RELATIVE_PATH FILE_NAME "${CMAKE_SOURCE_DIR}/shaders" "${GLSL_FILE}")
+    set(SPIRV_FILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
+    string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
+    string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
+    message(STATUS "Compiling shader: ${SPV_VAR_NAME}")
+    add_custom_command(
+        COMMENT "Compiling shader: ${FILE_NAME}"
+        OUTPUT  "${SPIRV_FILE}"
+        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_FILE}.d" --vn "${SPV_VAR_NAME}" "${GLSL_FILE}" -o "${SPIRV_FILE}"
+        DEPFILE "${SPIRV_FILE}.d"
+        DEPENDS ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} "${GLSL_FILE}")
+    list(APPEND SPIRV_HEADER_PATHS_REL "${FILE_NAME}")
+    list(APPEND SPIRV_HEADER_PATHS_FULL "${SPIRV_FILE}")
+    list(APPEND SPIRV_VARIABLE_NAMES "${SPV_VAR_NAME}")
+endforeach(GLSL_FILE)
 
 # create source file dynamically
 set(SPVRC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/spvrc.cpp")
@@ -155,6 +141,8 @@ add_library(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/src/spvrc.cpp" ${SPIRV_
 add_library(${PROJECT_NAME}::spvrc ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-# TESTING
-# add_executable(test_spvrc "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
-# target_link_libraries(test_spvrc PRIVATE spvrc::spvrc)
+# testing
+if (SPVRC_TOP_LEVEL_PROJECT)
+    add_executable(test_spvrc "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+    target_link_libraries(test_spvrc PRIVATE spvrc::spvrc)
+endif()
