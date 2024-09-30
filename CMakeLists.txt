@@ -83,7 +83,6 @@ foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     set(SPIRV_FILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
     string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
     string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
-    message(STATUS "Compiling shader: ${SPV_VAR_NAME}")
     add_custom_command(
         COMMENT "Compiling shader: ${FILE_NAME}"
         OUTPUT  "${SPIRV_FILE}"
