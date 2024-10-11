@@ -95,11 +95,12 @@ endforeach(GLSL_FILE)
 # create a command to generate the source file that depends on the shader headers
 set(SPVRC_SRC "${CMAKE_CURRENT_BINARY_DIR}/spvrc.cpp")
 add_custom_command(
-    COMMAND ${CMAKE_COMMAND} 
-        -DSPVRC_SRC=${SPVRC_SRC} 
-        -DSPVRC_SPIRV_HEADERS=${SPVRC_SPIRV_HEADERS} 
-        -DSPVRC_SPIRV_FILES=${SPVRC_SPIRV_FILES} 
-        -DSPVRC_SPIRV_SYMBOLS=${SPVRC_SPIRV_SYMBOLS} 
+    COMMAND_EXPAND_LISTS
+    COMMAND ${CMAKE_COMMAND}
+        -DSPVRC_SRC=${SPVRC_SRC}
+        -DSPVRC_SPIRV_HEADERS="${SPVRC_SPIRV_HEADERS}"
+        -DSPVRC_SPIRV_FILES="${SPVRC_SPIRV_FILES}"
+        -DSPVRC_SPIRV_SYMBOLS="${SPVRC_SPIRV_SYMBOLS}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_spvrc_source.cmake"
     DEPENDS ${SPVRC_SPIRV_HEADERS}
     OUTPUT ${SPVRC_SRC}
