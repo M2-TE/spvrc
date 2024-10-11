@@ -3,25 +3,23 @@ project(spvrc LANGUAGES CXX)
 
 # check if top level project
 set (SPVRC_TOP_LEVEL_PROJECT OFF)
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(SPVRC_TOP_LEVEL_PROJECT ON)
+    set(SPVRC_SHADER_ENV "vulkan1.3")
+    set(SPVRC_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 endif()
 
 # check if options are undefined
-if (NOT DEFINED SPVRC_SHADER_DIR)
-    if (NOT SPVRC_TOP_LEVEL_PROJECT)
-        message(FATAL_ERROR "SPVRC_SHADER_DIR must be defined")
-    else()
-        set(SPVRC_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-    endif()
+if(NOT DEFINED SPVRC_SHADER_DIR)
+    message(FATAL_ERROR "SPVRC_SHADER_DIR must be defined, set it to the directory containing the shaders")
 endif()
-if (NOT DEFINED SPVRC_SHADER_ENV)
-    set(SPVRC_SHADER_ENV "vulkan1.3")
+if(NOT DEFINED SPVRC_SHADER_ENV)
+    message(FATAL_ERROR "SPVRC_SHADER_ENV is not set, a good default would be vulkan1.3")
 endif()
 
 # build glslangValidator if not found
 find_package(Vulkan COMPONENTS glslangValidator)
-if (NOT ${Vulkan_glslangValidator_FOUND})
+if(NOT ${Vulkan_glslangValidator_FOUND})
     include(FetchContent)
     # SPIRV-Tools for glslang compiler
     set(SKIP_SPIRV_TOOLS_INSTALL ON)
@@ -80,19 +78,23 @@ set(GLSLANG_CLI_PARAMS
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     file(RELATIVE_PATH FILE_NAME "${CMAKE_SOURCE_DIR}/shaders" "${GLSL_FILE}")
-    set(SPIRV_FILE "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
+    set(SPIRV_HEADER "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
     string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
     string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
     add_custom_command(
         COMMENT "Compiling shader: ${FILE_NAME}"
-        OUTPUT  "${SPIRV_FILE}"
-        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_FILE}.d" --vn "${SPV_VAR_NAME}" "${GLSL_FILE}" -o "${SPIRV_FILE}"
-        DEPFILE "${SPIRV_FILE}.d"
+        OUTPUT  "${SPIRV_HEADER}"
+        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_HEADER}.d" --vn "${SPV_VAR_NAME}" "${GLSL_FILE}" -o "${SPIRV_HEADER}"
+        DEPFILE "${SPIRV_HEADER}.d"
         DEPENDS ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} "${GLSL_FILE}")
-    list(APPEND SPIRV_HEADER_PATHS_REL "${FILE_NAME}")
-    list(APPEND SPIRV_HEADER_PATHS_FULL "${SPIRV_FILE}")
-    list(APPEND SPIRV_VARIABLE_NAMES "${SPV_VAR_NAME}")
+    list(APPEND SPVRC_SPIRV_HEADERS "${SPIRV_HEADER}")
+    list(APPEND SPVRC_SPIRV_FILES "${FILE_NAME}")
+    list(APPEND SPVRC_SPIRV_SYMBOLS "${SPV_VAR_NAME}")
 endforeach(GLSL_FILE)
+
+function(spvrc_create_source_file)
+# TODO
+endfunction()
 
 # create source file dynamically
 set(SPVRC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/spvrc.cpp")
@@ -103,7 +105,7 @@ file(WRITE "${SPVRC_SRC}"
 #include \"spvrc/spvrc.hpp\"
 ")
 # include shader headers
-foreach(HEADER_PATH ${SPIRV_HEADER_PATHS_FULL})
+foreach(HEADER_PATH ${SPVRC_SPIRV_HEADERS})
     file(APPEND "${SPVRC_SRC}" "#include \"${HEADER_PATH}\"\n")
 endforeach(HEADER_PATH)
 # add namespace and shader load function
@@ -123,11 +125,11 @@ namespace spvrc {
         switch (hash(path)) {
 ")
 # insert shader data
-foreach(PATH_REL VAR_NAME IN ZIP_LISTS SPIRV_HEADER_PATHS_REL SPIRV_VARIABLE_NAMES)
+foreach(SPIRV_FILE SPIRV_SYMBOL IN ZIP_LISTS SPVRC_SPIRV_FILES SPVRC_SPIRV_SYMBOLS)
     file(APPEND "${SPVRC_SRC}"
-"            case hash(\"${PATH_REL}\"): data = { ${VAR_NAME}, ${VAR_NAME} + std::size(${VAR_NAME})}; break;\n"
+"            case hash(\"${SPIRV_FILE}\"): data = { ${SPIRV_SYMBOL}, ${SPIRV_SYMBOL} + std::size(${SPIRV_SYMBOL})}; break;\n"
     )
-endforeach(PATH_REL VAR_NAME)
+endforeach(SPIRV_FILE SPIRV_SYMBOL)
 # end namespace
 file(APPEND "${SPVRC_SRC}" "
             default: break;
@@ -136,12 +138,12 @@ file(APPEND "${SPVRC_SRC}" "
     }
 }")
 
-add_library(${PROJECT_NAME} "${CMAKE_CURRENT_SOURCE_DIR}/src/spvrc.cpp" ${SPIRV_HEADER_PATHS_FULL})
+add_library(${PROJECT_NAME} "${SPVRC_SRC}" ${SPVRC_SPIRV_HEADERS})
 add_library(${PROJECT_NAME}::spvrc ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 # testing
-if (SPVRC_TOP_LEVEL_PROJECT)
+if(SPVRC_TOP_LEVEL_PROJECT)
     add_executable(test_spvrc "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
     target_link_libraries(test_spvrc PRIVATE spvrc::spvrc)
 endif()
