@@ -92,53 +92,20 @@ foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     list(APPEND SPVRC_SPIRV_SYMBOLS "${SPV_VAR_NAME}")
 endforeach(GLSL_FILE)
 
-function(spvrc_create_source_file)
-# TODO
-endfunction()
-
-# create source file dynamically
+# create a command to generate the source file that depends on the shader headers
 set(SPVRC_SRC "${CMAKE_CURRENT_BINARY_DIR}/spvrc.cpp")
-file(WRITE "${SPVRC_SRC}"
-"#include <string_view>
-#include <cstdint>
-#include <vector>
-#include \"spvrc/spvrc.hpp\"
-")
-# include shader headers
-foreach(HEADER_PATH ${SPVRC_SPIRV_HEADERS})
-    file(APPEND "${SPVRC_SRC}" "#include \"${HEADER_PATH}\"\n")
-endforeach(HEADER_PATH)
-# add namespace and shader load function
-file(APPEND "${SPVRC_SRC}" "
-// https://stackoverflow.com/a/46711735
-constexpr uint32_t hash(std::string_view data) noexcept {
-    uint32_t hash = 5381;
-    for (const char &c : data) {
-        hash = ((hash << 5) + hash) + static_cast<unsigned char>(c);
-    }
-    return hash;
-}
-
-namespace spvrc {
-    auto load(std::string_view path) -> std::vector<uint32_t> {
-        std::vector<uint32_t> data;
-        switch (hash(path)) {
-")
-# insert shader data
-foreach(SPIRV_FILE SPIRV_SYMBOL IN ZIP_LISTS SPVRC_SPIRV_FILES SPVRC_SPIRV_SYMBOLS)
-    file(APPEND "${SPVRC_SRC}"
-"            case hash(\"${SPIRV_FILE}\"): data = { ${SPIRV_SYMBOL}, ${SPIRV_SYMBOL} + std::size(${SPIRV_SYMBOL})}; break;\n"
-    )
-endforeach(SPIRV_FILE SPIRV_SYMBOL)
-# end namespace
-file(APPEND "${SPVRC_SRC}" "
-            default: break;
-        }
-        return data;
-    }
-}")
-
-add_library(${PROJECT_NAME} "${SPVRC_SRC}" ${SPVRC_SPIRV_HEADERS})
+add_custom_command(
+    COMMAND ${CMAKE_COMMAND} 
+        -DSPVRC_SRC=${SPVRC_SRC} 
+        -DSPVRC_SPIRV_HEADERS=${SPVRC_SPIRV_HEADERS} 
+        -DSPVRC_SPIRV_FILES=${SPVRC_SPIRV_FILES} 
+        -DSPVRC_SPIRV_SYMBOLS=${SPVRC_SPIRV_SYMBOLS} 
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_spvrc_source.cmake"
+    DEPENDS ${SPVRC_SPIRV_HEADERS}
+    OUTPUT ${SPVRC_SRC}
+)
+# library will depend on source file output
+add_library(${PROJECT_NAME} "${SPVRC_SRC}")
 add_library(${PROJECT_NAME}::spvrc ALIAS ${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
