@@ -97,7 +97,7 @@ function(spvrc_create_source_file)
 endfunction()
 
 # create source file dynamically
-set(SPVRC_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/spvrc.cpp")
+set(SPVRC_SRC "${CMAKE_CURRENT_BINARY_DIR}/spvrc.cpp")
 file(WRITE "${SPVRC_SRC}"
 "#include <string_view>
 #include <cstdint>
