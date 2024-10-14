@@ -25,20 +25,18 @@ constexpr uint32_t hash(std::string_view data) noexcept {
 }
 
 namespace spvrc {
-    auto load(std::string_view path) -> std::vector<uint32_t> {
-        std::vector<uint32_t> data;
+    auto load(std::string_view path) -> std::pair<const uint32_t*, std::size_t> {
         switch (hash(path)) {"
 )
 # insert shader data
 foreach(SPIRV_FILE SPIRV_SYMBOL IN ZIP_LISTS SPVRC_SPIRV_FILES SPVRC_SPIRV_SYMBOLS)
     file(APPEND "${SPVRC_SRC}" "
-            case hash(\"${SPIRV_FILE}\"): data = { ${SPIRV_SYMBOL}, ${SPIRV_SYMBOL} + std::size(${SPIRV_SYMBOL})}; break;"
+            case hash(\"${SPIRV_FILE}\"): return std::make_pair(${SPIRV_SYMBOL}, std::size(${SPIRV_SYMBOL}));"
     )
 endforeach(SPIRV_FILE SPIRV_SYMBOL)
 # end namespace
 file(APPEND "${SPVRC_SRC}" "
-            default: assert(false && \"Shader not found\");
+            default: assert(false && \"Shader not found\"); return { nullptr, 0 };
         }
-        return data;
     }
 }")

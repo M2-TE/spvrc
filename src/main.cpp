@@ -3,7 +3,7 @@
 #include <string_view>
 
 int main() {
-    auto data = spvrc::load("example.comp");
-    std::cout << "data.size() = " << data.size() << std::endl;
+    auto [arr, size] = spvrc::load("example.comp");
+    std::cout << "data size: " << size << std::endl;
     return 0;
 }
