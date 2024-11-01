@@ -77,10 +77,15 @@ set(GLSLANG_CLI_PARAMS
     -I"${SPVRC_SHADER_DIR}")
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
-    file(RELATIVE_PATH FILE_NAME "${CMAKE_SOURCE_DIR}/shaders" "${GLSL_FILE}")
+    # get shortened path relative to shader directory root
+    cmake_path(RELATIVE_PATH GLSL_FILE BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/shaders" OUTPUT_VARIABLE FILE_NAME)
     set(SPIRV_HEADER "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
     string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
     string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
+    # create potentially missing directory for generated header
+    cmake_path(GET SPIRV_HEADER PARENT_PATH SPIRV_HEADER_DIR)
+    file(MAKE_DIRECTORY ${SPIRV_HEADER_DIR})
+    # compile shader into header file
     add_custom_command(
         COMMENT "Compiling shader: ${FILE_NAME}"
         OUTPUT  "${SPIRV_HEADER}"
