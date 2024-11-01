@@ -16,12 +16,12 @@ FetchContent_Declare(spvrc
     GIT_TAG "main"
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(spvrc)
-target_link_libraries(${PROJECT_NAME} PRIVATE spvrc::spvrc)
+target_link_libraries(${PROJECT_NAME} PUBLIC spvrc::spvrc)
 ```
 ### C++
 ```
 #include <spvrc/spvrc.hpp>
 void fnc() {
-    std::vector<uint32_t> shader_data = spvrc::load("shadername.vert);
+    std::vector<uint32_t> shader_data = spvrc::load("shadername.vert");
 }
 ```
