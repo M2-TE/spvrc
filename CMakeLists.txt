@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22) # check which the min version actually is
+cmake_minimum_required(VERSION 3.24)
 project(spvrc LANGUAGES CXX)
 
 # check if top level project
