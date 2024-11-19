@@ -19,7 +19,7 @@ endif()
 
 # build glslangValidator if not found
 find_package(Vulkan COMPONENTS glslangValidator)
-if(NOT ${Vulkan_glslangValidator_FOUND})
+if(NOT Vulkan_glslangValidator_FOUND)
     include(FetchContent)
     # SPIRV-Tools for glslang compiler
     set(SKIP_SPIRV_TOOLS_INSTALL ON)
