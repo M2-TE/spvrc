@@ -22,6 +22,7 @@ find_package(Vulkan COMPONENTS glslangValidator)
 if(Vulkan_glslangValidator_FOUND)
     # use the found glslangValidator from find_package()
     set(SPVRC_GLSLANG_VALIDATOR ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE})
+    set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER ON)
 else()
     # try to find glslang validator on cmd line
     find_program(GLSLANG_VALIDATOR_FOUND glslangValidator)
@@ -76,6 +77,7 @@ if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
         SYSTEM)
     FetchContent_MakeAvailable(glslang)
     set(SPVRC_GLSLANG_VALIDATOR glslang-standalone)
+    set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER ON)
 endif()
 
 # compile glsl to spirv
