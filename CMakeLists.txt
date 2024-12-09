@@ -17,9 +17,19 @@ if(NOT DEFINED SPVRC_SHADER_ENV)
     message(FATAL_ERROR "SPVRC_SHADER_ENV is not set, a good default would be vulkan1.3")
 endif()
 
-# build glslangValidator if not found
 find_package(Vulkan COMPONENTS glslangValidator)
-if(NOT Vulkan_glslangValidator_FOUND)
+set(SPVRC_GLSLANG_VALIDATOR "")
+if(Vulkan_glslangValidator_FOUND)
+    set(SPVRC_GLSLANG_VALIDATOR ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE})
+else()
+    find_program(GLSLANG_VALIDATOR_FOUND glslangValidator)
+    if (NOT ${GLSLANG_VALIDATOR_FOUND} STREQUAL "GLSLANG_VALIDATOR_FOUND-NOTFOUND")
+        set(SPVRC_GLSLANG_VALIDATOR glslangValidator)
+    endif()
+endif()
+
+# build glslangValidator if not found
+if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
     include(FetchContent)
     # SPIRV-Tools for glslang compiler
     set(SKIP_SPIRV_TOOLS_INSTALL ON)
@@ -61,7 +71,7 @@ if(NOT Vulkan_glslangValidator_FOUND)
         OVERRIDE_FIND_PACKAGE
         SYSTEM)
     FetchContent_MakeAvailable(glslang)
-    set(Vulkan_GLSLANG_VALIDATOR_EXECUTABLE glslang-standalone)
+    set(SPVRC_GLSLANG_VALIDATOR glslang-standalone)
 endif()
 
 # compile glsl to spirv
@@ -89,9 +99,9 @@ foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     add_custom_command(
         COMMENT "Compiling shader: ${FILE_NAME}"
         OUTPUT  "${SPIRV_HEADER}"
-        COMMAND ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_HEADER}.d" --vn "${SPV_VAR_NAME}" "${GLSL_FILE}" -o "${SPIRV_HEADER}"
+        COMMAND ${SPVRC_GLSLANG_VALIDATOR} ${GLSLANG_CLI_PARAMS} --depfile "${SPIRV_HEADER}.d" --vn "${SPV_VAR_NAME}" "${GLSL_FILE}" -o "${SPIRV_HEADER}"
         DEPFILE "${SPIRV_HEADER}.d"
-        DEPENDS ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} "${GLSL_FILE}")
+        DEPENDS ${SPVRC_GLSLANG_VALIDATOR} "${GLSL_FILE}")
     list(APPEND SPVRC_SPIRV_HEADERS "${SPIRV_HEADER}")
     list(APPEND SPVRC_SPIRV_FILES "${FILE_NAME}")
     list(APPEND SPVRC_SPIRV_SYMBOLS "${SPV_VAR_NAME}")
