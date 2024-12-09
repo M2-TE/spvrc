@@ -17,14 +17,18 @@ if(NOT DEFINED SPVRC_SHADER_ENV)
     message(FATAL_ERROR "SPVRC_SHADER_ENV is not set, a good default would be vulkan1.3")
 endif()
 
-find_package(Vulkan COMPONENTS glslangValidator)
 set(SPVRC_GLSLANG_VALIDATOR "")
+find_package(Vulkan COMPONENTS glslangValidator)
 if(Vulkan_glslangValidator_FOUND)
+    # use the found glslangValidator from find_package()
     set(SPVRC_GLSLANG_VALIDATOR ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE})
 else()
+    # try to find glslang validator on cmd line
     find_program(GLSLANG_VALIDATOR_FOUND glslangValidator)
     if (NOT ${GLSLANG_VALIDATOR_FOUND} STREQUAL "GLSLANG_VALIDATOR_FOUND-NOTFOUND")
-        set(SPVRC_GLSLANG_VALIDATOR glslangValidator)
+        set(SPVRC_GLSLANG_VALIDATOR ${GLSLANG_VALIDATOR_FOUND})
+        # the optimizer likely won't be available
+        set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER OFF)
     endif()
 endif()
 
@@ -82,9 +86,12 @@ file(GLOB_RECURSE GLSL_SOURCE_FILES CONFIGURE_DEPENDS
 set(GLSLANG_CLI_PARAMS 
     # --keep-uncalled
     # --spirv-val
-    --enhanced-msgs --quiet -Os
+    --enhanced-msgs --quiet
     --target-env "${SPVRC_SHADER_ENV}"
     -I"${SPVRC_SHADER_DIR}")
+if(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER)
+    list(APPEND GLSLANG_CLI_PARAMS -Os)
+endif()
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     # get shortened path relative to shader directory root
