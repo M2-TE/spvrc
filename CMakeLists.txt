@@ -52,14 +52,15 @@ if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
         GIT_TAG "vulkan-sdk-1.3.290.0"
         GIT_SHALLOW ON
         OVERRIDE_FIND_PACKAGE
+        EXCLUDE_FROM_ALL
         SYSTEM)
     FetchContent_Declare(spirv-tools
         GIT_REPOSITORY "https://github.com/KhronosGroup/SPIRV-Tools.git"
         GIT_TAG "vulkan-sdk-1.3.290.0"
         GIT_SHALLOW ON
         OVERRIDE_FIND_PACKAGE
+        EXCLUDE_FROM_ALL
         SYSTEM)
-    FetchContent_MakeAvailable(spirv-headers spirv-tools)
     # glslangValidator for runtime/static shader compilation
     set(ENABLE_OPT ON)
     set(ENABLE_HLSL OFF)
@@ -74,8 +75,9 @@ if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
         GIT_TAG "vulkan-sdk-1.3.290.0"
         GIT_SHALLOW ON
         OVERRIDE_FIND_PACKAGE
+        EXCLUDE_FROM_ALL
         SYSTEM)
-    FetchContent_MakeAvailable(glslang)
+    FetchContent_MakeAvailable(spirv-headers spirv-tools glslang)
     set(SPVRC_GLSLANG_VALIDATOR glslang-standalone)
     set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER ON)
 endif()
