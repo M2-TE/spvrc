@@ -96,11 +96,11 @@ set(GLSLANG_CLI_PARAMS
 if(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER)
     list(APPEND GLSLANG_CLI_PARAMS -Os)
 endif()
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+file(MAKE_DIRECTORY "${SPVRC_SHADER_DIR}")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     # get shortened path relative to shader directory root
-    cmake_path(RELATIVE_PATH GLSL_FILE BASE_DIRECTORY "${CMAKE_SOURCE_DIR}/shaders" OUTPUT_VARIABLE FILE_NAME)
-    set(SPIRV_HEADER "${CMAKE_CURRENT_BINARY_DIR}/shaders/${FILE_NAME}.hpp")
+    cmake_path(RELATIVE_PATH GLSL_FILE BASE_DIRECTORY "${SPVRC_SHADER_DIR}" OUTPUT_VARIABLE FILE_NAME)
+    set(SPIRV_HEADER "${SPVRC_SHADER_DIR}/${FILE_NAME}.hpp")
     string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
     string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
     # create potentially missing directory for generated header
