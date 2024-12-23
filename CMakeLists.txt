@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16...3.24)
 project(spvrc LANGUAGES CXX)
 
+# disallow option() from overwriting set()
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 # check if top level project
 set (SPVRC_TOP_LEVEL_PROJECT OFF)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -17,7 +20,6 @@ if(NOT DEFINED SPVRC_SHADER_ENV)
     message(FATAL_ERROR "SPVRC_SHADER_ENV is not set, a good default would be vulkan1.3")
 endif()
 
-set(SPVRC_GLSLANG_VALIDATOR "")
 find_package(Vulkan COMPONENTS glslangValidator)
 if(Vulkan_glslangValidator_FOUND)
     # use the found glslangValidator from find_package()
