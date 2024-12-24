@@ -1,8 +1,5 @@
-cmake_minimum_required(VERSION 3.16...3.24)
+cmake_minimum_required(VERSION 3.16...3.31)
 project(spvrc LANGUAGES CXX)
-
-# disallow option() from overwriting set()
-set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 # check if top level project
 set (SPVRC_TOP_LEVEL_PROJECT OFF)
