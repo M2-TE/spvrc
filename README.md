@@ -1,4 +1,4 @@
-# SPVRC
+# SPIRV-RC
 
 The SPIR-V Resource Compiler
 
