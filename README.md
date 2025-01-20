@@ -1,4 +1,4 @@
-# SPIRV-RC
+# spvrc
 
 The SPIR-V Resource Compiler
 
@@ -12,7 +12,7 @@ Shaders can be loaded at runtime using a relative path string.
 set(SPVRC_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 set(SPVRC_SHADER_ENV "vulkan1.3")
 FetchContent_Declare(spvrc
-    GIT_REPOSITORY "https://github.com/M2-TE/spirv-rc.git"
+    GIT_REPOSITORY "https://github.com/M2-TE/spvrc.git"
     GIT_TAG "v1.0.2"
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(spvrc)
