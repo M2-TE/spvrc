@@ -21,19 +21,16 @@ find_package(Vulkan COMPONENTS glslangValidator)
 if(Vulkan_glslangValidator_FOUND)
     # use the found glslangValidator from find_package()
     set(SPVRC_GLSLANG_VALIDATOR ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE})
-    set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER ON)
 else()
     # try to find glslang validator on cmd line
     find_program(GLSLANG_VALIDATOR_FOUND glslangValidator)
     if (NOT ${GLSLANG_VALIDATOR_FOUND} STREQUAL "GLSLANG_VALIDATOR_FOUND-NOTFOUND")
         set(SPVRC_GLSLANG_VALIDATOR ${GLSLANG_VALIDATOR_FOUND})
-        # the optimizer likely won't be available
-        set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER OFF)
     endif()
 endif()
 
 # build glslangValidator if not found
-if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
+if(NOT DEFINED SPVRC_GLSLANG_VALIDATOR)
     include(FetchContent)
     # SPIRV-Tools for glslang compiler
     set(SKIP_SPIRV_TOOLS_INSTALL ON)
@@ -51,14 +48,12 @@ if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
         GIT_TAG "vulkan-sdk-1.3.290.0"
         GIT_SHALLOW ON
         OVERRIDE_FIND_PACKAGE
-        EXCLUDE_FROM_ALL
         SYSTEM)
     FetchContent_Declare(spirv-tools
         GIT_REPOSITORY "https://github.com/KhronosGroup/SPIRV-Tools.git"
         GIT_TAG "vulkan-sdk-1.3.290.0"
         GIT_SHALLOW ON
         OVERRIDE_FIND_PACKAGE
-        EXCLUDE_FROM_ALL
         SYSTEM)
     # glslangValidator for runtime/static shader compilation
     set(ENABLE_OPT ON)
@@ -74,11 +69,9 @@ if(SPVRC_GLSLANG_VALIDATOR STREQUAL "")
         GIT_TAG "vulkan-sdk-1.3.290.0"
         GIT_SHALLOW ON
         OVERRIDE_FIND_PACKAGE
-        EXCLUDE_FROM_ALL
         SYSTEM)
     FetchContent_MakeAvailable(spirv-headers spirv-tools glslang)
     set(SPVRC_GLSLANG_VALIDATOR glslang-standalone)
-    set(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER ON)
 endif()
 
 # compile glsl to spirv
@@ -91,10 +84,8 @@ set(GLSLANG_CLI_PARAMS
     # --spirv-val
     --enhanced-msgs --quiet
     --target-env "${SPVRC_SHADER_ENV}"
+    -Os
     -I"${SPVRC_SHADER_DIR}")
-if(SPVRC_GLSLANG_VALIDATOR_OPTIMIZER)
-    list(APPEND GLSLANG_CLI_PARAMS -Os)
-endif()
 file(MAKE_DIRECTORY "${SPVRC_SHADER_DIR}")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     # get shortened path relative to shader directory root
