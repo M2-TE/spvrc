@@ -86,6 +86,12 @@ set(GLSLANG_CLI_PARAMS
     --target-env "${SPVRC_SHADER_ENV}"
     -Os
     -I"${SPVRC_SHADER_DIR}")
+# add all include directories
+foreach(SHADER_INCLUDE_DIR ${SPVRC_SHADER_INCLUDE_DIRS})
+    set(GLSLANG_CLI_PARAMS ${GLSLANG_CLI_PARAMS} -I"${SHADER_INCLUDE_DIR}")
+endforeach(SHADER_INCLUDE_DIR)
+
+# compile shaders
 file(MAKE_DIRECTORY "${SPVRC_SHADER_DIR}")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     # get shortened path relative to shader directory root
