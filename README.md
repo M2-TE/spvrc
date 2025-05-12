@@ -5,7 +5,7 @@ Shaders can be loaded at runtime using a relative path string.
 
 ## Getting Started
 ### CMakeLists.txt
-```
+```cmake
 set(SPVRC_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 set(SPVRC_SHADER_ENV "vulkan1.3")
 FetchContent_Declare(spvrc
@@ -16,7 +16,7 @@ FetchContent_MakeAvailable(spvrc)
 target_link_libraries(${PROJECT_NAME} PUBLIC spvrc::spvrc)
 ```
 ### C++
-```
+```cpp
 #include <spvrc/spvrc.hpp>
 void fnc() {
     std::vector<uint32_t> shader_data = spvrc::load("shadername.vert");
