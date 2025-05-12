@@ -13,7 +13,7 @@ set(SPVRC_SHADER_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/another/shader/dir/")
 FetchContent_Declare(spvrc
     GIT_REPOSITORY "https://github.com/M2-TE/spvrc.git"
-    GIT_TAG "v1.0.4"
+    GIT_TAG "v1.0.5"
     GIT_SHALLOW ON)
 FetchContent_MakeAvailable(spvrc)
 target_link_libraries(${PROJECT_NAME} PUBLIC spvrc::spvrc)
