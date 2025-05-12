@@ -17,15 +17,16 @@ if(NOT DEFINED SPVRC_SHADER_ENV)
     message(FATAL_ERROR "SPVRC_SHADER_ENV is not set, a good default would be vulkan1.3")
 endif()
 
-find_package(Vulkan COMPONENTS glslangValidator)
-if(Vulkan_glslangValidator_FOUND)
-    # use the found glslangValidator from find_package()
-    set(SPVRC_GLSLANG_VALIDATOR ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE})
+
+# try to find glslang validator on cmd line
+find_program(GLSLANG_VALIDATOR_FOUND glslangValidator)
+if (GLSLANG_VALIDATOR_FOUND)
+    set(SPVRC_GLSLANG_VALIDATOR ${GLSLANG_VALIDATOR_FOUND})
 else()
-    # try to find glslang validator on cmd line
-    find_program(GLSLANG_VALIDATOR_FOUND glslangValidator)
-    if (NOT ${GLSLANG_VALIDATOR_FOUND} STREQUAL "GLSLANG_VALIDATOR_FOUND-NOTFOUND")
-        set(SPVRC_GLSLANG_VALIDATOR ${GLSLANG_VALIDATOR_FOUND})
+    # try to find glslang via find_package()
+    find_package(Vulkan COMPONENTS glslangValidator)
+    if(Vulkan_glslangValidator_FOUND)
+        set(SPVRC_GLSLANG_VALIDATOR ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE})
     endif()
 endif()
 
