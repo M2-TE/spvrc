@@ -6,12 +6,12 @@ set (SPVRC_TOP_LEVEL_PROJECT OFF)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(SPVRC_TOP_LEVEL_PROJECT ON)
     set(SPVRC_SHADER_ENV "vulkan1.3")
-    set(SPVRC_SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
+    set(SPVRC_SHADER_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 endif()
 
 # check if options are undefined
-if(NOT DEFINED SPVRC_SHADER_DIR)
-    message(FATAL_ERROR "SPVRC_SHADER_DIR must be defined, set it to the directory containing the shaders")
+if(NOT DEFINED SPVRC_SHADER_BASE_DIR)
+    message(FATAL_ERROR "SPVRC_SHADER_BASE_DIR must be defined, set it to the directory containing the shaders")
 endif()
 if(NOT DEFINED SPVRC_SHADER_ENV)
     message(FATAL_ERROR "SPVRC_SHADER_ENV is not set, a good default would be vulkan1.3")
@@ -77,26 +77,26 @@ endif()
 
 # compile glsl to spirv
 file(GLOB_RECURSE GLSL_SOURCE_FILES CONFIGURE_DEPENDS
-    "${SPVRC_SHADER_DIR}/*.vert"
-    "${SPVRC_SHADER_DIR}/*.frag"
-    "${SPVRC_SHADER_DIR}/*.comp")
+    "${SPVRC_SHADER_BASE_DIR}/*.vert"
+    "${SPVRC_SHADER_BASE_DIR}/*.frag"
+    "${SPVRC_SHADER_BASE_DIR}/*.comp")
 set(GLSLANG_CLI_PARAMS 
     # --keep-uncalled
     # --spirv-val
     --enhanced-msgs --quiet
     --target-env "${SPVRC_SHADER_ENV}"
     -Os
-    -I"${SPVRC_SHADER_DIR}")
+    -I"${SPVRC_SHADER_BASE_DIR}")
 # add all include directories
 foreach(SHADER_INCLUDE_DIR ${SPVRC_SHADER_INCLUDE_DIRS})
     set(GLSLANG_CLI_PARAMS ${GLSLANG_CLI_PARAMS} -I"${SHADER_INCLUDE_DIR}")
 endforeach(SHADER_INCLUDE_DIR)
 
 # compile shaders
-file(MAKE_DIRECTORY "${SPVRC_SHADER_DIR}")
+file(MAKE_DIRECTORY "${SPVRC_SHADER_BASE_DIR}")
 foreach(GLSL_FILE ${GLSL_SOURCE_FILES})
     # get shortened path relative to shader directory root
-    cmake_path(RELATIVE_PATH GLSL_FILE BASE_DIRECTORY "${SPVRC_SHADER_DIR}" OUTPUT_VARIABLE FILE_NAME)
+    cmake_path(RELATIVE_PATH GLSL_FILE BASE_DIRECTORY "${SPVRC_SHADER_BASE_DIR}" OUTPUT_VARIABLE FILE_NAME)
     set(SPIRV_HEADER "${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}.hpp")
     string(REPLACE "/" "_" SPV_VAR_NAME "${FILE_NAME}")
     string(REPLACE "." "_" SPV_VAR_NAME "${SPV_VAR_NAME}")
